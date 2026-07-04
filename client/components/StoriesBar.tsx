@@ -6,6 +6,7 @@ import { dummyStoriesData } from '@/assets/assets'
 import { Ionicons } from '@/expo/vector-icons'
 import { Colors } from '../constants/Colors'
 import * as ImagePicker from 'expo-image-picker'
+import Avatar from './Avatar'
 
 
 
@@ -68,16 +69,20 @@ export default function StoriesBar({ onViewStroy }: StoriesBarProps) {
             <TouchableOpacity style={styles.storyItem} onPress={()=>
                 onViewStroy(us)}>
                     <View style={styles.storyRing}>
+                       <Avatar name={us.user.name} src={us.user.avatar} size={52}/>
                         
                     </View>
+                    <Text style={styles.label} numberOfLines={1}>
+                        {us.user.name.split(" ")[0]}
+                    </Text>
             
 
             </TouchableOpacity>
         )
-    }}>
+    }}/>
 
 
 
-    </FlatList>
+    
   )
 }

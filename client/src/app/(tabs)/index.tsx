@@ -8,6 +8,8 @@ import { styles } from '@/assets/styles/MessagesScreen.styles';
 import { TextInput } from 'react-native-gesture-handler';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import StoriesBar from '../../../components/StoriesBar';
+
 
 
 export default function MessagesScreen() {
@@ -66,6 +68,7 @@ export default function MessagesScreen() {
       </View>
 
       {/* Stories */}
+      <StoriesBar onViewStory={(us)=> setSelectedStory(us)}/>
 
       {/* Divider */}
 
