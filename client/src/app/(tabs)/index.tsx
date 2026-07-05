@@ -67,7 +67,7 @@ export default function MessagesScreen() {
       </View>
       {/* Search */}
       <View style={styles.searchRow}>
-        <Ionicons name='search' size={16} color={Colors.outlinerVariant}/>
+        <Ionicons name='search' size={16} color={Colors.outlineVariant}/>
         <TextInput style={styles.searchInput}
         value={search}
         onChangeText={setSearch}
