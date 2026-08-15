@@ -13,6 +13,7 @@ import Bubble from '../../../components/Bubble'
 import { Image } from 'expo-image'
 import { TextInput } from 'react-native-gesture-handler'
 import * as ImagePicker from 'expo-image-picker'
+import { LinearGradient } from 'react-native-svg'
 
 
 export default function ChatScreen() {
@@ -73,6 +74,17 @@ export default function ChatScreen() {
     const handleTyping = (val: string)=>{
       setText(val)
     }
+
+    const send = async () => {
+      if(!text.trim() && !mediaUri || !selectedConversation) return;
+
+      setSending(true)
+      setTimeout(()=>{
+        setSending(false)
+        setText("")
+        setMediaUri(null)
+      }, 500)
+    } 
 
 
   
@@ -211,6 +223,20 @@ export default function ChatScreen() {
             multiline
             maxLength={2000}
           />
+
+         <TouchableOpacity disabled={!text.trim() && !mediaUri || sending}
+         activeOpacity={0.85}
+         onPress={send} >
+          <LinearGradient colors={[Colors.primary, Colors.primaryContainer]}
+          style={[styles.sendBtn, !text.trim() && 
+          !mediaUri && styles.sendBtnDisabled]}>
+            {sending ? (
+              <ActivityIndicator color="#fff" size="small"/>
+            ):(
+              <Ionicons name='send' size={16} color="#fff"/>
+            )}
+          </LinearGradient>
+         </TouchableOpacity>
 
         </View>
       </View>
