@@ -35,7 +35,7 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
 
 
 // Get current user's profile
-export const getCurrentUserProfile = async (req: AuthRequest, res: Response) => {
+export const getProfile = async (req: AuthRequest, res: Response) => {
     const user = await User.findById(req.user!.id).select("name email handle avatar bio isOnline lastSeen");
     if(!user){
         res.status(404).json({success: false, message: "User not found"});
@@ -46,7 +46,7 @@ export const getCurrentUserProfile = async (req: AuthRequest, res: Response) => 
 
 
 // Update profile (name, bio, handle, avatar)
-export const updateProfile = async (req: AuthRequest, res: Response)=>{
+export const updatedSProfile = async (req: AuthRequest, res: Response)=>{
     const {name, bio, handle} = req.body;
     const file = req.file ;
 

@@ -1,26 +1,66 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { AppProvider } from "../../context/AppContext";
 // import  * as SplashScreen  from 'expo-splash-screen';
+import {ClerkLoaded, ClerkProvider, useAuth} from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
+import { useEffect } from "react";
+import { Background } from "expo-router/build/react-navigation";
+import { Colors } from "../../constants/Colors";
+import { ActivityIndicator } from "react-native";
+import { View } from "react-native";
 
 
-// SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync();
+
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!
+
+if (!publishableKey) {
+  throw new Error('Add your Clerk Publishable Key to the .env file')
+} 
 
 function AuthGuard(){
-  const { isSignedIn} = {isSignedIn: true}
+  const { isSignedIn, isLoaded} = useAuth()
+  const segments = useSegments();
 
-  if(!isSignedIn){
-    return <Redirect href="/(auth)"/>
-  }else if((isSignedIn)){
-    return <Redirect href="/(tabs)"/>
+  const router = useRouter();
+
+  useEffect(()=>{
+    if(!isLoaded) return;
+  SplashScreen.hideAsync();
+  const inAuth = segments[0] === "(auth)"
+   
+  if(!isSignedIn && !inAuth){
+   router.replace( "/(auth)")
+  }else if((isSignedIn && inAuth)){
+   router.replace( "/(tabs)")
   }
+},[isSignedIn, isLoaded, segments])
+
+if(!isLoaded){
+  return(
+    <View style = {{flex:1, justifyContent:"center", alignItems: "center", backgroundColor: Colors.surface}}>
+      <ActivityIndicator size="large" color={Colors.primary} />
+    </View>
+  )
+}
+return null
 }
 
 
 export default function RootLayout() {
-  return <GestureHandlerRootView style={{flex: 1}}>
 
-    <AuthGuard/>
+
+  return 
+
+  <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+  <ClerkLoaded>
+  <GestureHandlerRootView style={{flex: 1}}>
+
+    <AppProvider>
+       <AuthGuard />
 
 
 
@@ -31,5 +71,11 @@ export default function RootLayout() {
 
    </Stack>
    <StatusBar style="dark"/>
+
+    </AppProvider>
+
+   
    </GestureHandlerRootView>
+   </ClerkLoaded>
+   </ClerkProvider>
 }
