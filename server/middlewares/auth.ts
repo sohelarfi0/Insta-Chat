@@ -11,7 +11,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     try{
         const {userId} = getAuth(req);
         if(!userId){
-            res.status(401).json({sucess: false, message:"Unauthenticated"})
+            res.status(401).json({success: false, message:"Unauthenticated"})
             return;
 
         }
@@ -57,8 +57,18 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 
 
     }
+    // Attach the user to the request object for downstream middleware and route handlers
+    req.user = {
+        id: localUser._id,
+        name: localUser.name,
+        email: localUser.email
+    }
+    next();
 
-
-}catch(error){
+    }
+catch(error){
+    console.error("Auth Middleware Error: ", error);
+    res.status(401).json({success: false, message: "Invalid or expired token."});
+}
 
 }
