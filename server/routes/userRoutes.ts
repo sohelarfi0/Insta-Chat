@@ -9,7 +9,7 @@ const userRouter = Router();
 
 userRouter.get('/',getUsers)
 userRouter.get('/search',searchUsers)
-userRouter.get('/profile', getProfile)
+userRouter.get('/profile',authMiddleware, getProfile)
 userRouter.put('/profile', upload.single("avatar"),authMiddleware, updatedSProfile)
 
 

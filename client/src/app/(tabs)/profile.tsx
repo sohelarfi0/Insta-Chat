@@ -154,11 +154,11 @@ export default function profile() {
           </TouchableOpacity>
           {!editMode && (
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user?.name}</Text>
-              <Text style={styles.userHandle}>@{user?.handle}</Text>
+              <Text style={styles.userName}>{profileName}</Text>
+              <Text style={styles.userHandle}>@{profileHandle}</Text>
               <Text style={styles.userEmail}>{user?.email}</Text>
               {user?.bio && 
-              <Text style={styles.userBio}>{user?.bio}</Text>}
+              <Text style={styles.userBio}>{profileBio}</Text>}
             </View>
           )}
 

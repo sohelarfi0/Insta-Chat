@@ -59,7 +59,7 @@ export const updatedSProfile = async (req: AuthRequest, res: Response)=>{
 
     }
 
-    let avataerUrl = "";
+    let avatarUrl = "";
     if(file){
         try{
         const uploadPromise = new Promise<{secure_url: string}> ((resolve, reject)=>{
@@ -73,7 +73,7 @@ export const updatedSProfile = async (req: AuthRequest, res: Response)=>{
             readableStream.pipe(uploadStream);
         })
         const result = await uploadPromise;
-        avataerUrl = result.secure_url;
+        avatarUrl = result.secure_url;
 
 
     }
@@ -92,8 +92,8 @@ const updateData: any = {
 
 }
 
-if(avataerUrl){
-    updateData.avatar = avataerUrl;
+if(avatarUrl){
+    updateData.avatar = avatarUrl;
 
 
 }
