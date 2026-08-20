@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
-import React, {use, useState} from 'react'
+import React, {use, useEffect, useState} from 'react'
 import { dummyUserProfile } from '@/assets/assets'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { styles } from '@/assets/styles/ProfileScreen.styles'
@@ -94,6 +94,29 @@ export default function profile() {
     ])
 
   }
+
+  const getUser = async ()=>{
+    try {
+      const {data} = await api.get("/api/users/profile")
+      setProfileName(data.user.name)
+      setProfileHandle(data.user.handle)
+      setProfileBio(data.user.bio)
+      if(data.user.avatar){
+        setSavedAvatar(data.user.avatar)
+        setAvatarUri(null)
+      }
+      
+    } catch (err: any) {
+      console.log(err.message)
+
+      
+    }
+  }
+
+  useEffect(()=>{
+    getUser()
+
+  },[])
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
