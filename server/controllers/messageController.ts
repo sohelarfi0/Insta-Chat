@@ -142,7 +142,7 @@ export const  sendMessage = async(req: AuthRequest, res: Response)=>{
 // get all messages in a conversation
 export const  getMessages = async(req: AuthRequest, res: Response)=>{
     const userId= req.user!.id;
-    const {conversationId} = req.body;
+    const {conversationId} = req.params;
 
     const conversation = await Conversation.findOne({_id: conversationId, participants:{
         $in: [userId]
