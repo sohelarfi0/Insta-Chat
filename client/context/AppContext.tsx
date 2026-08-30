@@ -1,8 +1,9 @@
-import { AuthState, User } from "../types";
+import { AuthState, Conversation, Message, User, UserStory, WsEvent } from "../types";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import axios from "axios"
-import { API_BASE_URL } from "../constants/config";
+import { API_BASE_URL, WS_URL } from "../constants/config";
 import { useAuth, useSignIn, useUser } from "@clerk/expo";
+import { useReducedMotion } from "react-native-reanimated";
 
 export const api = axios.create({baseURL: API_BASE_URL})
 
@@ -15,7 +16,24 @@ interface AppContextType {
     updateUser: (user:User)=>Promise<void>;
     users: User[],
     setUsers: React.Dispatch<React.SetStateAction<User[]>>
+
+    userStories: UserStory[];
+    setUserStories: React.Dispatch<React.SetStateAction<UserStory[]>>
+
+    conversations: Conversation[]
+    setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>
+    selectedConversation: Conversation | null;
+    setSelectedConversation: (c: Conversation | null)=> void;
+
+    messages: Message[]
+    setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+
+
+    fetchStories: ()=> Promise<void>;
+    typingUsers: Record<string, boolean>
+    sendWsEvent: (data: object)=> void;
 }
+
 
 const AppContext = createContext<AppContextType | null>(null);
 
@@ -26,6 +44,13 @@ export function AppProvider({children}: {children: ReactNode}){
     
     const {getToken, isLoaded: authLoaded, isSignedIn, signOut} = useAuth()
     const {user: clerkUser, isLoaded: userLoaded} = useUser()
+
+    const  [conversations, setConversations] = useState<Conversation[]>([])
+    const [ selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+    const [messages, setMessages] = useState<Message[]>([])
+    const [userStories, setUserStories] = useState<UserStory[]> ([]);
+    const {typingUsers, setTypingUsers} = useState<Record<string, boolean>>({});
+    const wsRef = useRef<WebSocket | null> (null)
 
     const getTokenRef = useRef(getToken)
     useEffect(()=>{
@@ -86,15 +111,143 @@ export function AppProvider({children}: {children: ReactNode}){
     
     const logout = useCallback(async()=> {
         _tokenRef.current = null;
+        wsRef.current?.close();
         await signOut();
         setAuth({token: null, user: null, loading: false})
+        setConversations([])
+        setMessages([])
+        setSelectedConversation(null)
+
 
     },[signOut])
+
 
     const updateUser = useCallback(async (user: User)=>{
         setAuth((prev)=>({...prev, user}))
 
     },[])
+
+    const fetchStories = useCallback(async ()=>{
+        try {
+            const {data} = await api.get("/api/stories");
+            if(data.success) setUserStories(data.stories)
+        } catch (error) {
+    setTimeout(()=> fetchStories(), 1000);
+
+            
+        }
+
+    },[])
+
+    const sendWsEvent = useCallback(async (data: object)=>{
+        if(wsRef.current?.readyState === WebSocket.OPEN){
+            wsRef.current.send(JSON.stringify(data))
+        }
+
+    },[])
+
+    // WebSocket lifecycle secured with dynamic clerk token
+    useEffect(()=>{
+        if(!isSignedIn || !authLoaded || !userLoaded){
+            wsRef.current?.close()
+            return;
+        }
+        let isMounted = true;
+        let ws: WebSocket | null = null;
+
+        const connectWs = async()=>{
+            try {
+                const token = await getTokenRef.current();
+                if(!token || !isMounted) return;
+
+                ws = new WebSocket(`${WS_URL}/ws?token=${token}`);
+                wsRef.current = ws;
+
+                ws.onmessage = (e)=>{
+                    const event: WsEvent = JSON.parse(e.data);
+
+                    if(event.type === "message"){
+                        const incoming = event.payload as Message;
+                        setMessages((prev)=>{
+                            if(prev.length > 0 && prev[0].conversationId === incoming.conversationId){
+                                return [ ...prev, incoming]
+                            }
+                            return prev;
+                        });
+
+                        setConversations((prev)=>{
+                            const exists = prev.some((c)=> c._id === incoming.conversationId);
+                            if(!exists){
+                                api.get("/api/messages/conversations")
+                                .then(({data})=>{
+                                    if(data.success){
+                                        setConversations(data.conversations)
+                                    }
+                                }).catch(console.error)
+                                return prev;
+                            }
+                            return prev.map((c)=> c._id === incoming.conversationId ? {...c,
+                                lastMessage: incoming, updatedAt: incoming.createdAt}:c).sort
+                                ((a, b)=> new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                            })
+                    }
+
+                    if(event.type === "typing"){
+                        const {senderId, isTyping}  = event;
+                        if(senderId && isTyping!= undefined){
+                            setTypingUsers((prev)=>
+                                ({...prev, [senderId]: isTyping}))
+                        }
+                    }
+
+                    if(event.type === "online_status"){
+                        const {userId, isOnline} = event;
+                        if(userId && isOnline!== undefined){
+                            setUsers((prev)=> prev.map((u)=>(u._id === userId ? {...u,
+                                isOnline}:u)));
+
+                            setConversations((prev)=> prev.map((c)=>{
+                                if(c.participant?._id){
+                                  return {...c, participant: {...c.participant, isOnline}}
+
+                                }
+                                return c;
+                            }))
+                        }
+
+
+
+                    }
+
+                    if(event.type === "user_update"){
+                        const updated =  event.user as User;
+                        if(updated){
+                            setUsers((prev)=> prev.map((u)=> (u._id === updated._id ? updated : u)));
+
+                            setConversations((prev)=>
+                            prev.map((c)=>(c.participant?._id  === updated._id? {...c,
+                                participant: updated
+                            }: c))
+                         );
+                        //  9:49 minutes
+                        }
+                    }
+
+
+
+
+
+
+
+
+
+                }
+                
+            } catch (error) {
+                
+            }
+        }
+    })
 
     return (
         <AppContext.Provider  value={{auth , logout, updateUser, users, setUsers}}>
