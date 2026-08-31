@@ -10,7 +10,6 @@ import {
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { dummyConversationData } from '@/assets/assets'
 import { styles } from '@/assets/styles/MessagesScreen.styles'
 import { Colors } from '../../../constants/Colors'
 import { Ionicons } from '@expo/vector-icons'
@@ -20,6 +19,7 @@ import StoryViewer from '../../../components/StoryViewer'
 import ConvoItem from '../../../components/ConvoItem'
 
 import { Conversation, UserStory } from '../../../types'
+import { api } from '../../../context/AppContext'
 
 export default function MessagesScreen() {
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -32,11 +32,14 @@ export default function MessagesScreen() {
   const fetchConversations = () => {
     setLoading(true)
 
-    setTimeout(() => {
-      setConversations(dummyConversationData as Conversation[])
-      setLoading(false)
-    }, 1000)
+   api.get<{success: boolean; conversations: Conversation[]}>("/api/messages/conversations").then(({data})=>{
+    if(data.success) setConversations(data.conversations);
+    setLoading(false)
+   }).catch(()=>{
+    setTimeout(fetchConversations, 1000)
+   })
   }
+
 
   useEffect(() => {
     fetchConversations()

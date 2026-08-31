@@ -2,11 +2,11 @@ import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { styles } from '@/assets/styles/StoriesBar.styles'
 import { UserStory } from '../types'
-import { dummyStoriesData } from '@/assets/assets'
 import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '../constants/Colors'
 import * as ImagePicker from 'expo-image-picker'
 import Avatar from './Avatar'
+import { api, useApp } from '../context/AppContext'
 
 interface StoriesBarProps {
     onViewStroy: (us: UserStory) => void
@@ -14,7 +14,7 @@ interface StoriesBarProps {
 
 export default function StoriesBar({ onViewStroy }: StoriesBarProps) {
     const [uploading, setUploading] = useState(false)
-    const userStories = dummyStoriesData
+    const {userStories, fetchStories} = useApp()
 
     const pickAndUpload = async () => {
         const { status } =
@@ -47,9 +47,19 @@ export default function StoriesBar({ onViewStroy }: StoriesBarProps) {
 
         setUploading(true)
 
-        setTimeout(() => {
+        try {
+            const {data} = await api.post("/api/stories", formData, {
+                headers: {"Context-Type": "multipart/form-data"}
+            })
+            if(data.success) fetchStories()
+            
+        } catch (error: any) {
+            Alert.alert("Error","Failed to post story");
+            console.log(error);
+            
+        }finally{
             setUploading(false)
-        }, 2000)
+        }
     }
 
     return (

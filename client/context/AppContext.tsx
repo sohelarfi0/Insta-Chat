@@ -49,7 +49,7 @@ export function AppProvider({children}: {children: ReactNode}){
     const [ selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [userStories, setUserStories] = useState<UserStory[]> ([]);
-    const {typingUsers, setTypingUsers} = useState<Record<string, boolean>>({});
+    const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
     const wsRef = useRef<WebSocket | null> (null)
 
     const getTokenRef = useRef(getToken)
@@ -230,27 +230,61 @@ export function AppProvider({children}: {children: ReactNode}){
                             }: c))
                          );
                         //  9:49 minutes
+                        setSelectedConversation((prev)=>{
+                            if(prev && prev.participant?._id === updated._id){
+                                return {...prev, participant: updated}
+                            }
+                            return prev;
+                        })
+                        setUserStories((prev)=>prev.map((us)=>(us.user._id === updated._id ?{...us, user: updated}: us))
+                    
+                        )
+                        }
+                    }
+                    if(event.type === "chat_deleted"){
+                        const {conversationId} = event;
+
+                        if(conversationId){
+                            setConversations((prev)=> prev.filter((c)=>c._id !== conversationId));
+                            setSelectedConversation((prev)=>(prev?._id === conversationId? null : prev))
                         }
                     }
 
 
-
-
-
-
-
-
-
                 }
+                ws.onerror = ()=> ws?.close()
+
                 
-            } catch (error) {
+            } catch (err) {
+                console.error("WS connect error:", err);
                 
             }
         }
-    })
+        connectWs()
+
+        return ()=>{
+            isMounted = false;
+            ws?.close()
+        }
+    },[isSignedIn, authLoaded, userLoaded])
 
     return (
-        <AppContext.Provider  value={{auth , logout, updateUser, users, setUsers}}>
+        <AppContext.Provider  value={{auth 
+        , logout,
+         updateUser
+         , users,
+          setUsers,
+          conversations,
+          setConversations,
+          selectedConversation,
+          setSelectedConversation,
+          messages,
+          setMessages,
+          userStories,
+          setUserStories,
+          fetchStories,
+          typingUsers,
+          sendWsEvent}}>
             {children}
         </AppContext.Provider>
     )

@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import {User as IUser} from '../../types';
+import {User as IUser} from '../../types/index.tx';
 import { useRouter } from 'expo-router';
 import { dummyUsers } from '@/assets/assets';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +22,7 @@ export default function search() {
   const fetchUsers = async () => {
     setLoading(true)
     setTimeout(()=>{
+      // 10:04 mins
       setUsers(dummyUsers)
       setLoading(false)
     },1000)
