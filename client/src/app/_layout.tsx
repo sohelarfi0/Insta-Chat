@@ -51,9 +51,21 @@ return null
 
 
 export default function RootLayout() {
+  useEffect(()=>{
+    if(typeof document !== 'undefined'){
+      if(!document.getElementById('clerk-captcha')){
+        const el = document.createElement('div');
+        el.id = 'clerk-captcha';
+        el.style.position = 'absolute';
+        el.style.inset = '0';
+        el.style.pointerEvents = 'none';
+        el.style.visibility = 'hidden';
+        document.body.appendChild(el);
+      }
+    }
+  },[])
 
-
-  return 
+  return (
 
   <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
   <ClerkLoaded>
@@ -78,4 +90,5 @@ export default function RootLayout() {
    </GestureHandlerRootView>
    </ClerkLoaded>
    </ClerkProvider>
+  )
 }

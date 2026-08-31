@@ -13,7 +13,7 @@ messageRouter.get('/conversations/:conversationId/messages', getMessages);
 messageRouter.get('/conversations/with/:targetUserId',getOrCreateConversation);
 messageRouter.post('/send',upload.single("file") ,sendMessage);
 
-messageRouter.delete('conversations/:conversationId', deleteConversation);
+messageRouter.delete('/conversations/:conversationId', deleteConversation);
 
 
 export default messageRouter;

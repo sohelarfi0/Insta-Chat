@@ -1,7 +1,9 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "module": "ESNext",
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "paths": {
       "@/*": [
         "./src/*"
@@ -16,5 +18,9 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
+  ]
+  ,
+  "exclude": [
+    "example"
   ]
 }

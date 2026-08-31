@@ -29,15 +29,18 @@ export default function MessagesScreen() {
 
   const router = useRouter()
 
-  const fetchConversations = () => {
+  const fetchConversations = async () => {
     setLoading(true)
-
-   api.get<{success: boolean; conversations: Conversation[]}>("/api/messages/conversations").then(({data})=>{
-    if(data.success) setConversations(data.conversations);
-    setLoading(false)
-   }).catch(()=>{
-    setTimeout(fetchConversations, 1000)
-   })
+    try {
+      const { data } = await api.get<{ success: boolean; conversations: Conversation[] }>(
+        '/api/messages/conversations'
+      )
+      if (data?.success) setConversations(data.conversations)
+    } catch (error) {
+      console.error('Failed to fetch conversations', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
 

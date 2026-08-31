@@ -1,0 +1,6 @@
+#clerk-captcha {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  visibility: hidden;
+}

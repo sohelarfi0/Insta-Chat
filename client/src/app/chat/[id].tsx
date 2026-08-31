@@ -13,22 +13,13 @@ import Bubble from '../../../components/Bubble'
 import { Image } from 'expo-image'
 import { TextInput } from 'react-native-gesture-handler'
 import * as ImagePicker from 'expo-image-picker'
-import { LinearGradient } from 'react-native-svg'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useApp } from '../../../context/AppContext'
 
 
 export default function ChatScreen() {
   const router = useRouter()
-  let {auth, messages, users, selectedConversation, typingUsers} = {
-    auth: {},
-    messages: dummyMessages,
-    users: dummyUsers,
-    selectedConversation: dummyConversationData[0],
-    typingUsers: {
-      [dummyUsers[0]._id]: true,
-
-    }
-
-  }
+  const { auth, messages, users, selectedConversation, typingUsers } = useApp()
 
   const [text, setText] = useState("")
   const [sending, setSending] = useState(false)
@@ -112,8 +103,7 @@ export default function ChatScreen() {
 
   const headerName = partner!.name;
   const headerAvatar = partner!.avatar;
-  const headerSub = partner!.isOnline ? "online" : partner?.lastSeen ? `Last seen 
-  ${formatTime(formatTime(partner.lastSeen))}` : "offline";
+  const headerSub = partner!.isOnline ? "online" : partner?.lastSeen ? `Last seen ${formatTime(partner.lastSeen)}` : "offline";
 
 
 

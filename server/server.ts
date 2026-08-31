@@ -29,8 +29,8 @@ app.get('/', (req: Request, res: Response) =>{
 
 
 app.use("/api/users", userRouter);
-app.use("api/messages", messageRouter);
-app.use("api/stories", storyRouter);
+app.use("/api/messages", messageRouter);
+app.use("/api/stories", storyRouter);
 
 // Error Handler
 app.use((err: any, _req: Request,res:Response,_next:NextFunction)=>{

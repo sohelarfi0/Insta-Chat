@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '../constants/Colors'
 import * as ImagePicker from 'expo-image-picker'
 import Avatar from './Avatar'
+import { Platform } from 'react-native'
 import { api, useApp } from '../context/AppContext'
 
 interface StoriesBarProps {
@@ -39,25 +40,39 @@ export default function StoriesBar({ onViewStroy }: StoriesBarProps) {
 
         const formData = new FormData()
 
-        formData.append('file', {
-            uri: asset.uri,
-            type: asset.mimeType || 'image/jpeg',
-            name: asset.fileName || 'story.jpg',
-        } as any)
+        // On web, fetch the URI and append a Blob; on native, append the file object
+        if (Platform.OS === 'web') {
+            try {
+                const resp = await fetch(asset.uri)
+                const blob = await resp.blob()
+                const filename = asset.fileName || `story.${blob.type.split('/')[1] || 'jpg'}`
+                formData.append('file', blob as any, filename)
+            } catch (err) {
+                console.log('Failed to fetch asset blob for web upload', err)
+                Alert.alert('Error', 'Failed to prepare media for upload')
+                return
+            }
+        } else {
+            formData.append('file', {
+                uri: asset.uri,
+                type: asset.mimeType || (asset.type === 'video' ? 'video/mp4' : 'image/jpeg'),
+                name: asset.fileName || 'story.jpg',
+            } as any)
+        }
 
         setUploading(true)
 
         try {
-            const {data} = await api.post("/api/stories", formData, {
-                headers: {"Context-Type": "multipart/form-data"}
-            })
-            if(data.success) fetchStories()
-            
+            console.log('Uploading story asset:', { uri: asset.uri, type: asset.type, name: asset.fileName })
+            // Let axios/set the Content-Type (with boundary) for multipart.
+            const { data } = await api.post('/api/stories', formData)
+            if (data.success) fetchStories()
+
         } catch (error: any) {
-            Alert.alert("Error","Failed to post story");
-            console.log(error);
-            
-        }finally{
+            Alert.alert('Error', 'Failed to post story')
+            console.log('Story upload error:', error?.response?.status, error?.response?.data || error.message)
+
+        } finally {
             setUploading(false)
         }
     }

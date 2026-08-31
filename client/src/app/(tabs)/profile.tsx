@@ -127,11 +127,11 @@ export default function profile() {
 
           </Text>
           {!editMode && (
-            <TouchableOpacity style={styles.editBtn} onPress={()=> setEditMode(true)}>
-            <Text style={styles.editBtn} onPress={()=>setEditMode(true)}>
-              <Ionicons name="pencil" size={16} color={Colors.primary}/>
-              <Text style={styles.editBtnText}>Edit</Text>
-            </Text>
+            <TouchableOpacity style={styles.editBtn} onPress={() => setEditMode(true)}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="pencil" size={16} color={Colors.primary} />
+                <Text style={styles.editBtnText}>Edit</Text>
+              </View>
             </TouchableOpacity>
           )}
 
@@ -152,13 +152,12 @@ export default function profile() {
 
             </View>
           </TouchableOpacity>
-          {!editMode && (
+          {editMode ? null : (
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{profileName}</Text>
               <Text style={styles.userHandle}>@{profileHandle}</Text>
               <Text style={styles.userEmail}>{user?.email}</Text>
-              {user?.bio && 
-              <Text style={styles.userBio}>{profileBio}</Text>}
+              {user?.bio && <Text style={styles.userBio}>{profileBio}</Text>}
             </View>
           )}
 

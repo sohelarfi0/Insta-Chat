@@ -2,11 +2,11 @@ import {TouchableOpacity, View, Text, KeyboardAvoidingView, Platform, ScrollView
 import React, {useState} from 'react'
 import { useRouter } from 'expo-router'
 import {SafeAreaView} from 'react-native-safe-area-context'
-import {styles} from '@/assets//styles/AuthScreen.styles'
+import {styles} from '@/assets/styles/AuthScreen.styles'
 import {LinearGradient} from 'expo-linear-gradient'
 import { Colors } from '../../../constants/Colors';
 import {SvgXml} from 'react-native-svg'
-import { TextInput } from 'react-native-gesture-handler'
+import { TextInput } from 'react-native'
 import {Ionicons} from '@expo/vector-icons'
 import { useClerk, useSignIn, useSignUp } from '@clerk/expo'
 
@@ -18,11 +18,11 @@ export default function AuthScreen() {
   const {signUp} = useSignUp();
   const {setActive} = useClerk();
   const [mode, setMode] = useState<Mode>("login")
-  const [name, setName] = useState(" ")
-  const [handle, setHandle] = useState(" ")
-  const [email, setEmail] = useState(" ")
-  const [password, setPassword] = useState(" ")
-  const [verificationCode, setVerificationCode] = useState(" ")
+  const [name, setName] = useState("")
+  const [handle, setHandle] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verifyingMode, setVerifyingMode] = useState<"login" | "login_mfa" | "register">("register")
@@ -31,34 +31,28 @@ export default function AuthScreen() {
 
   const handleSubmit = async () => {
     if(!email.trim() || !password.trim()) return Alert.alert("Validation", "Please fill all fields")
+    if(mode === "register" && password.length < 6) return Alert.alert("Validation", "Password must be at least 6 characters")
       if(mode === "register" && (!handle.trim())) return Alert.alert("Validation", "Please fill all fields")
 
         setLoading(true)
         try {
           if(mode === "login"){
             if(!signIn)return;
-            const result = await signIn.create({
-              identifier: email,
-              password
-            })
+            const result = await signIn.create({ identifier: email, password });
+            if(result.error) throw result.error;
 
-            if(result.error){
-              throw result.error
-            }
-
-            if(signIn.status === "complete"){
-             await setActive({session: signIn.createdSessionId})
-             router.replace("/(tabs)")
-
-            }else if(signIn.status === "needs_first_factor" && signIn.emailCode){
+            if(result.status === "complete"){
+              await setActive({ session: result.createdSessionId });
+              router.replace("/(tabs)");
+            } else if(result.status === "needs_first_factor"){
+              // trigger email code flow using the hook
               await signIn.emailCode.sendCode();
-              setVerifyingMode("login")
-              setVerifying(true)
-            }
-            else if(signIn.status === "needs_second_factor" && signIn.mfa){
-              await signIn.mfa.sendEmailCode()
+              setVerifyingMode("login");
+              setVerifying(true);
+            } else if(result.status === "needs_second_factor"){
+              await signIn.mfa.sendEmailCode();
               setVerifyingMode("login_mfa");
-              setVerifying(true)
+              setVerifying(true);
             }
           }else{
             if(!signUp) return;
@@ -87,10 +81,10 @@ export default function AuthScreen() {
             setVerifying(true)
           }
           
-        } catch (err: any) {
-          Alert.alert("Authentication Error", err?.errors?.[0]?.message || err?.message ||
-            "Something went wrong"
-          );
+        } catch (err) {
+          console.error("Auth submit error:", err);
+          const serverMsg = (err as any)?.errors?.[0]?.message || (err as any)?.message || (err as any)?.response?.data || JSON.stringify(err);
+          Alert.alert("Authentication Error", String(serverMsg));
 
 
 
@@ -109,16 +103,11 @@ export default function AuthScreen() {
    try {
     if(verifyingMode === "register"){
       if(!signUp) return;
-      const result = await signUp.verifications.verifyEmailCode({
-        code:verificationCode
-      })
-      if(result.error){
-        throw result.error;
-
-      }
-      if(signUp.status === "complete"){
-        await setActive({session : signIn.createdSessionId})
-        router.replace(("/(tabs)"))
+        const result = await signUp.verifications.verifyEmailCode({ code: verificationCode });
+        if(result.error) throw result.error;
+        if(signUp.status === "complete"){
+          await setActive({ session: signUp.createdSessionId });
+          router.replace("/(tabs)");
         }
         else{
           Alert.alert("Verification Failed", "Please check the code and try again");
@@ -127,10 +116,11 @@ export default function AuthScreen() {
 
       }
     
-   } catch (err: any) {
-    Alert.alert("Verification Error", err?.errors?.[0]?.message || err?.message || "Something went wrong")
-    
-   }
+  } catch (err) {
+   console.error("Verification error:", err);
+   const serverMsg = (err as any)?.errors?.[0]?.message || (err as any)?.message || (err as any)?.response?.data || JSON.stringify(err);
+   Alert.alert("Verification Error", String(serverMsg));
+  }
    finally{
     setLoading(false)
    }

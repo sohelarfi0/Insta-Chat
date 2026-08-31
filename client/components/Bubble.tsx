@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Linking, Image } from 'react-native'
 import React from 'react'
 import { Message } from '../types';
 import { styles } from '@/assets/styles/Bubble.styles';
-import { LinearGradient } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { formatTime } from '../utils/formatTime';
