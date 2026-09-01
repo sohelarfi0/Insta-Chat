@@ -19,14 +19,13 @@ import StoryViewer from '../../../components/StoryViewer'
 import ConvoItem from '../../../components/ConvoItem'
 
 import { Conversation, UserStory } from '../../../types'
-import { api } from '../../../context/AppContext'
+import { api, useApp } from '../../../context/AppContext'
 
 export default function MessagesScreen() {
-  const [conversations, setConversations] = useState<Conversation[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [selectedStory, setSelectedStory] = useState<UserStory | null>(null)
-
+  const {setSelectedConversation,setConversations, conversations,selectedConversation} = useApp()
   const router = useRouter()
 
   const fetchConversations = async () => {
@@ -59,6 +58,7 @@ export default function MessagesScreen() {
     : conversations
 
   const openConvo = (c: Conversation) => {
+    setSelectedConversation(c)
     router.push(`/chat/${c._id}`)
   }
 
